@@ -3,9 +3,13 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/Users/User/AndroidStudioProjects/registerloginexample/app/src/main/res/layout/activity_login.xml" value="0.17572463768115942" />
-        <entry key="..\:/Users/User/AndroidStudioProjects/registerloginexample/app/src/main/res/layout/activity_main.xml" value="0.33" />
-        <entry key="..\:/Users/User/AndroidStudioProjects/registerloginexample/app/src/main/res/layout/activity_register.xml" value="0.33" />
+        <entry key="..\:/Users/User/AndroidStudioProjects/registerloginexample/app/src/main/res/drawable/button_shape.xml" value="0.1" />
+        <entry key="..\:/Users/User/AndroidStudioProjects/registerloginexample/app/src/main/res/drawable/edit_box.xml" value="0.1" />
+        <entry key="..\:/Users/User/AndroidStudioProjects/registerloginexample/app/src/main/res/drawable/login_shape.xml" value="0.1" />
+        <entry key="..\:/Users/User/AndroidStudioProjects/registerloginexample/app/src/main/res/layout/activity_login.xml" value="0.25" />
+        <entry key="..\:/Users/User/AndroidStudioProjects/registerloginexample/app/src/main/res/layout/activity_main.xml" value="0.25" />
+        <entry key="..\:/Users/User/AndroidStudioProjects/registerloginexample/app/src/main/res/layout/activity_register.xml" value="0.2966101694915254" />
+        <entry key="..\:/Users/User/AndroidStudioProjects/registerloginexample/app/src/main/res/layout/login_shape.xml" value="0.23541666666666666" />
       </map>
     </option>
   </component>
