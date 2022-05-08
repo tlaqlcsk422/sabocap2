@@ -40,12 +40,12 @@ public class MainActivity extends AppCompatActivity {
 
         bt = new BluetoothSPP(this); //Initializing
 
-        if (!bt.isBluetoothAvailable()) { //블루투스 사용 불가
-            Toast.makeText(getApplicationContext()
-                    , "Bluetooth is not available"
-                    , Toast.LENGTH_SHORT).show();
-            finish();
-        }
+//        if (!bt.isBluetoothAvailable()) { //블루투스 사용 불가
+//            Toast.makeText(getApplicationContext()
+//                    , "Bluetooth is not available"
+//                    , Toast.LENGTH_SHORT).show();
+//            finish();
+//        }
 
         bt.setOnDataReceivedListener(new BluetoothSPP.OnDataReceivedListener() { //데이터 수신
             public void onDataReceived(byte[] data, String message) {
@@ -89,29 +89,29 @@ public class MainActivity extends AppCompatActivity {
         bt.stopService(); //블루투스 중지
     }
 
-    public void onStart() {
-        super.onStart();
-        if (!bt.isBluetoothEnabled()) { //
-            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
-            startActivityForResult(intent, BluetoothState.REQUEST_ENABLE_BT);
-        } else {
-            if (!bt.isServiceAvailable()) {
-                bt.setupService();
-                bt.startService(BluetoothState.DEVICE_OTHER); //DEVICE_ANDROID는 안드로이드 기기 끼리
-                setup();
-            }
-        }
-    }
+//    public void onStart() {
+//        super.onStart();
+//        if (!bt.isBluetoothEnabled()) { //
+//            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+//                // TODO: Consider calling
+//                //    ActivityCompat#requestPermissions
+//                // here to request the missing permissions, and then overriding
+//                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+//                //                                          int[] grantResults)
+//                // to handle the case where the user grants the permission. See the documentation
+//                // for ActivityCompat#requestPermissions for more details.
+//                return;
+//            }
+//            startActivityForResult(intent, BluetoothState.REQUEST_ENABLE_BT);
+//        } else {
+//            if (!bt.isServiceAvailable()) {
+//                bt.setupService();
+//                bt.startService(BluetoothState.DEVICE_OTHER); //DEVICE_ANDROID는 안드로이드 기기 끼리
+//                setup();
+//            }
+//        }
+//    }
 
     public void setup() {
         Button btnSend = findViewById(R.id.btn_open); //데이터 전송

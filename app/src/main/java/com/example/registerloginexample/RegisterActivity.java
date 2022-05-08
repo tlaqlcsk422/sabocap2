@@ -3,6 +3,7 @@ package com.example.registerloginexample;
 import static android.hardware.SensorManager.SENSOR_DELAY_UI;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.room.Room;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -31,6 +32,8 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.List;
+
 public class RegisterActivity extends AppCompatActivity {
 
     private EditText et_id, et_pass, et_name, et_age;
@@ -52,6 +55,8 @@ public class RegisterActivity extends AppCompatActivity {
     private double RAD2DGR = 180/ Math.PI;
     private static final float NS2S = 1.0f/1000000000.0f;
 
+    private UserDao userDao;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) { // 액티비티 시작시 처음으로 실행되는 생명주기!
@@ -63,6 +68,14 @@ public class RegisterActivity extends AppCompatActivity {
         et_pass = findViewById(R.id.et_pass);
         et_name = findViewById(R.id.et_name);
         et_age = findViewById(R.id.et_age);
+
+        UserDB databaseUser = Room.databaseBuilder(getApplicationContext(), UserDB.class, "User_db")
+                .fallbackToDestructiveMigration()
+                .allowMainThreadQueries()
+                .build();
+
+        userDao = databaseUser.userDao();
+        List<User> userList = userDao.getUserDBAll();
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
@@ -95,35 +108,62 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // EditText에 현재 입력되어있는 값을 get(가져온다)해온다.
+                int num = userList.size()+1;
+                Log.d("num", String.valueOf(num));
                 String userID = et_id.getText().toString();
                 String userPass = et_pass.getText().toString();
                 String userName = et_name.getText().toString();
-//                int userAge = Integer.parseInt(et_age.getText().toString());
+                Integer userAge = Integer.parseInt(et_age.getText().toString());
 
-                Response.Listener<String> responseListener = new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        try {
-                            JSONObject jsonObject = new JSONObject(response);
-                            boolean success = jsonObject.getBoolean("success");
-                            if (success) { // 회원등록에 성공한 경우
-                                Toast.makeText(getApplicationContext(),"회원 등록에 성공하였습니다.",Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-                                startActivity(intent);
-                            } else { // 회원등록에 실패한 경우
-                                Toast.makeText(getApplicationContext(),"회원 등록에 실패하였습니다.",Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
+                User user = new User(userID, userPass, userAge, userName);
+                boolean success = false;
+                boolean empty = true;
+                for(int i = 0; i<userList.size(); i++) {
+                    if (userList.get(i).getEmail().equals(userID)) {
+                        Toast.makeText(getApplicationContext(), "이미 존재하는 이메일 입니다.", Toast.LENGTH_SHORT).show();
+                        empty = false;
                     }
-                };
+                }
+                Log.d("empty", String.valueOf(empty));
+//                if(!empty)
+//                    userDao.setInsertUser(user);
+                Log.d("num",String.valueOf(num));
+                Log.d("userList", String.valueOf(userList.size()));
+                if(empty){
+                    userDao.setInsertUser(user);
+                    Toast.makeText(getApplicationContext(),"회원 등록 성공",Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(getApplicationContext(), "회원 등록 실패",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+//                Response.Listener<String> responseListener = new Response.Listener<String>() {
+//                    @Override
+//                    public void onResponse(String response) {
+//                        User user = new User(userID, userPass, userAge, userName);
+//                        userDao.setInsertUser(user);
+//                        boolean success = false;
+//                        if(num == userList.size())
+//                            success = true;
+//                        System.out.println(success);
+////                            JSONObject jsonObject = new JSONObject(response);
+////                            boolean success = jsonObject.getBoolean("success");
+//                        if (success) { // 회원등록에 성공한 경우
+//                            Toast.makeText(getApplicationContext(),"회원 등록에 성공하였습니다.",Toast.LENGTH_SHORT).show();
+//                            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+//                            startActivity(intent);
+//                        } else { // 회원등록에 실패한 경우
+//                            Toast.makeText(getApplicationContext(),"회원 등록에 실패하였습니다.",Toast.LENGTH_SHORT).show();
+//                            return;
+//                        }
+//                    }
+//                };
                 // 서버로 Volley를 이용해서 요청을 함.
-                RegisterRequest registerRequest = new RegisterRequest(userID,userPass,userName, responseListener);
-                RequestQueue queue = Volley.newRequestQueue(RegisterActivity.this);
-                queue.add(registerRequest);
+//                RegisterRequest registerRequest = new RegisterRequest(userID,userPass,userName, responseListener);
+//                RequestQueue queue = Volley.newRequestQueue(RegisterActivity.this);
+//                queue.add(registerRequest);
 
             }
         });
