@@ -44,10 +44,40 @@ public class RegisterActivity extends AppCompatActivity {
     private SensorEventListener mAccLis;
     private Sensor mGgyroSensor = null;
     private Sensor mAccelometerSensor = null;
+    double start = System.currentTimeMillis(); // start = 시작시간 - 1970년
 
     private double pitch;
     private double roll;
     private double yaw;
+
+
+    private double gyro_x1;
+    private double gyro_y1;
+    private double gyro_z1;
+
+    private double gyro_x2;
+    private double gyro_y2;
+    private double gyro_z2;
+
+    private double gyro_x3;
+    private double gyro_y3;
+    private double gyro_z3;
+
+    private double acc_x1;
+    private double acc_y1;
+    private double acc_z1;
+
+    private double acc_x2;
+    private double acc_y2;
+    private double acc_z2;
+
+    private double acc_x3;
+    private double acc_y3;
+    private double acc_z3;
+
+
+    private int num=0;
+    private int num2 =0;
 
     private double timestamp;
     private double dt;
@@ -89,6 +119,9 @@ public class RegisterActivity extends AppCompatActivity {
             public boolean onTouch(View v, MotionEvent event){
                 switch (event.getAction()){
                     case MotionEvent.ACTION_DOWN:
+                        num = 0;
+                        num2 = 0;
+                        start = System.currentTimeMillis(); // start = 시작시간 - 1970년
                         mSensorManager.registerListener(mGyroLis, mGgyroSensor,SensorManager.SENSOR_DELAY_UI);
                         mSensorManager.registerListener(mAccLis, mAccelometerSensor, SENSOR_DELAY_UI);
                         break;
@@ -115,7 +148,7 @@ public class RegisterActivity extends AppCompatActivity {
                 String userName = et_name.getText().toString();
                 Integer userAge = Integer.parseInt(et_age.getText().toString());
 
-                User user = new User(userID, userPass, userAge, userName);
+                User user = new User(userID, userPass, userAge, userName,gyro_x1,gyro_x2,gyro_x3,gyro_y1,gyro_y2,gyro_y3,gyro_z1,gyro_z2,gyro_z3,acc_x1,acc_x2,acc_x3,acc_y1,acc_y2,acc_y3,acc_z1,acc_z2,acc_z3);
                 boolean success = false;
                 boolean empty = true;
                 for(int i = 0; i<userList.size(); i++) {
@@ -192,6 +225,10 @@ public class RegisterActivity extends AppCompatActivity {
             double gyroY = event.values[1];
             double gyroZ = event.values[2];
 
+
+            double end; // end = 종료시간 - 1970년
+            double current;
+
             /* 각속도를 적분하여 회전각을 추출하기 위해 적분 간격(dt)을 구한다.
              * dt : 센서가 현재 상태를 감지하는 시간 간격
              * NS2S : nano second -> second */
@@ -207,7 +244,31 @@ public class RegisterActivity extends AppCompatActivity {
                 pitch = pitch + gyroY*dt;
                 roll = roll + gyroX*dt;
                 yaw = yaw + gyroZ*dt;
+                end = System.currentTimeMillis(); // end = 종료시간 - 1970년
+                current = end-start;
+                if(num2==2 && current> 2000 && current < 3000){
+                    gyro_x3 = gyroX;
+                    gyro_y3 = gyroY;
+                    gyro_z3 = gyroZ;
+                    num2++;
+                }
+                else if(num2==1 && current > 1000 && current < 2000){
+                    gyro_x2 = gyroX;
+                    gyro_y2 = gyroY;
+                    gyro_z2 = gyroZ;
+                    num2++;
+                }
+                else if(num2 == 0 && current > 0 && current < 1000){
+                    gyro_x1 = gyroX;
+                    gyro_y1 = gyroY;
+                    gyro_z1 = gyroZ;
+                    num2++;
+                }
+                Toast.makeText(getApplicationContext(), current+" 1:"+String.format("%.4f",gyro_x1) +" 2:"+ String.format("%.4f",gyro_x2) +" 3:"+ String.format("%.4f",gyro_x3)+"",Toast.LENGTH_SHORT).show();
 
+
+
+//                Toast.makeText(getApplicationContext(), timestamp+"X:"+String.format("%.4f",gyroX)+" Y:"+String.format("%.4f",gyroY)+" Z:"+String.format("%.4f",gyroZ),Toast.LENGTH_SHORT).show();
                 Log.e("LOG", "GYROSCOPE           [X]:" + String.format("%.4f", event.values[0])
                         + "           [Y]:" + String.format("%.4f", event.values[1])
                         + "           [Z]:" + String.format("%.4f", event.values[2])
@@ -234,8 +295,34 @@ public class RegisterActivity extends AppCompatActivity {
             double accY = event.values[1];
             double accZ = event.values[2];
 
+            double end; // end = 종료시간 - 1970년
+            double current;
+
+
             double angleXZ = Math.atan2(accX,  accZ) * 180/Math.PI;
             double angleYZ = Math.atan2(accY,  accZ) * 180/Math.PI;
+
+            end = System.currentTimeMillis(); // end = 종료시간 - 1970년
+            current = end-start;
+
+            if(num==2 && current> 2000 && current < 3000){
+                acc_x3 = accX;
+                acc_y3 = accY;
+                acc_z3 = accZ;
+                num++;
+            }
+            else if(num==1 && current > 1000 && current < 2000){
+                acc_x2 = accX;
+                acc_y2 = accY;
+                acc_z2 = accZ;
+                num++;
+            }
+            else if(num == 0 && current > 0 && current < 1000){
+                acc_x1 = accX;
+                acc_y1 = accY;
+                acc_z1 = accZ;
+                num++;
+            }
 
             Log.e("LOG", "ACCELOMETER           [X]:" + String.format("%.4f", event.values[0])
                     + "           [Y]:" + String.format("%.4f", event.values[1])
