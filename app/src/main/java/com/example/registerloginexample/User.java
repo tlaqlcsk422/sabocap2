@@ -4,6 +4,7 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
+
 @Entity
 public class User {
     @PrimaryKey(autoGenerate = true)
@@ -17,14 +18,16 @@ public class User {
 
     private String name;
 
+
     private double gyro_x1=0,gyro_y1=0,gyro_z1=0,gyro_x2=0,gyro_y2=0,gyro_z2=0,gyro_x3=0,gyro_y3=0,gyro_z3=0;
 
     private double acc_x1=0,acc_y1=0,acc_z1=0,acc_x2=0,acc_y2=0,acc_z2=0,acc_x3=0,acc_y3=0,acc_z3=0;
 
     @Ignore
-    User(){
+    User(String userID, String userPass, Integer userAge, String userName, android.hardware.Sensor sensor){
 
     }
+
     User(String email, String password, int age, String name, double gyro_x1, double gyro_x2, double gyro_x3, double gyro_y1, double gyro_y2, double gyro_y3, double gyro_z1, double gyro_z2, double gyro_z3, double acc_x1, double acc_x2, double acc_x3, double acc_y1, double acc_y2, double acc_y3, double acc_z1, double acc_z2, double acc_z3){
         this.email = email;
         this.password = password;
@@ -49,6 +52,7 @@ public class User {
         this.acc_z2 = acc_z2;
         this.acc_z3 = acc_z3;
     }
+
 
     public int getKey() {
         return key;
@@ -90,7 +94,8 @@ public class User {
         this.name = name;
     }
 
-    public double getGyro_x1() {
+
+        public double getGyro_x1() {
         return gyro_x1;
     }
 

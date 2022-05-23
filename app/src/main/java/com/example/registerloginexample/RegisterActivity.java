@@ -13,7 +13,6 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,13 +23,6 @@ import android.widget.Toast;
 //import com.android.volley.RequestQueue;
 //import com.android.volley.Response;
 //import com.android.volley.toolbox.Volley;
-
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.toolbox.Volley;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.List;
 
@@ -74,6 +66,7 @@ public class RegisterActivity extends AppCompatActivity {
     private double acc_x3;
     private double acc_y3;
     private double acc_z3;
+
 
 
     private int num=0;

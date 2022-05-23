@@ -1,86 +1,116 @@
 package com.example.registerloginexample;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
+import static android.hardware.SensorManager.SENSOR_DELAY_UI;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
-
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import java.io.IOException;
-
-import app.akexorcist.bluetotohspp.library.BluetoothSPP;
-import app.akexorcist.bluetotohspp.library.BluetoothState;
-import app.akexorcist.bluetotohspp.library.DeviceList;
-
-
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.SystemClock;
-
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.os.Bundle;
+
+import android.content.Intent;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
+//import com.android.volley.RequestQueue;
+//import com.android.volley.Response;
+//import com.android.volley.toolbox.Volley;
+
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
-    TextView mTvBluetoothStatus;
-    TextView mTvReceiveData;
-    TextView mTvSendData;
-    Button mBtnBluetoothOn;
-    Button mBtnBluetoothOff;
-    Button mBtnConnect;
-    Button mBtnSendData;
 
-    BluetoothAdapter mBluetoothAdapter;
-    Set<BluetoothDevice> mPairedDevices;
-    List<String> mListPairedDevices;
+    private TextView gyro_x11,gyro_x22,gyro_x33,gyro_y11,gyro_y22,gyro_y33,gyro_z11,gyro_z22,gyro_z33,acc_x11,acc_x22,acc_x33,acc_y11,acc_y22,acc_y33,acc_z11,acc_z22,acc_z33;
+    private Button btn_blue, btn_gyro2;
+    private SensorManager mSensorManager = null;
 
-    Handler mBluetoothHandler;
-    ConnectedBluetoothThread mThreadConnectedBluetooth;
-    BluetoothDevice mBluetoothDevice;
-    BluetoothSocket mBluetoothSocket;
+    private SensorEventListener mGyroLis;
+    private SensorEventListener mAccLis;
+    private Sensor mGgyroSensor = null;
+    private Sensor mAccelometerSensor = null;
+    double start = System.currentTimeMillis(); // start = 시작시간 - 1970년
 
-    final static int BT_REQUEST_ENABLE = 1;
-    final static int BT_MESSAGE_READ = 2;
-    final static int BT_CONNECTING_STATUS = 3;
-    final static UUID BT_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    private double pitch;
+    private double roll;
+    private double yaw;
+
+
+    private double gyro_x1=0;
+    private double gyro_y1=0;
+    private double gyro_z1=0;
+
+    private double gyro_x2=0;
+    private double gyro_y2=0;
+    private double gyro_z2=0;
+
+    private double gyro_x3=0;
+    private double gyro_y3=0;
+    private double gyro_z3=0;
+
+    private double acc_x1=0;
+    private double acc_y1=0;
+    private double acc_z1=0;
+
+    private double acc_x2=0;
+    private double acc_y2=0;
+    private double acc_z2=0;
+
+    private double acc_x3=0;
+    private double acc_y3=0;
+    private double acc_z3=0;
+
+
+
+    private int num=0;
+    private int num2 =0;
+
+    private double timestamp;
+    private double dt;
+
+    private double RAD2DGR = 180/ Math.PI;
+    private static final float NS2S = 1.0f/1000000000.0f;
 
     private UserDao userDao;
 
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) { // 액티비티 시작시 처음으로 실행되는 생명주기!
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        gyro_x11 = findViewById(R.id.gyro_x1);
+        gyro_x22 = findViewById(R.id.gyro_x2);
+        gyro_x33 = findViewById(R.id.gyro_x3);
+
+        gyro_y11 = findViewById(R.id.gyro_y1);
+        gyro_y22 = findViewById(R.id.gyro_y2);
+        gyro_y33 = findViewById(R.id.gyro_y3);
+
+        gyro_z11 = findViewById(R.id.gyro_z1);
+        gyro_z22 = findViewById(R.id.gyro_z2);
+        gyro_z33 = findViewById(R.id.gyro_z3);
+
+        acc_x11 = findViewById(R.id.acc_x1);
+        acc_x22 = findViewById(R.id.acc_x2);
+        acc_x33 = findViewById(R.id.acc_x3);
+
+        acc_y11 = findViewById(R.id.acc_y1);
+        acc_y22 = findViewById(R.id.acc_y2);
+        acc_y33 = findViewById(R.id.acc_y3);
+
+        acc_z11 = findViewById(R.id.acc_z1);
+        acc_z22 = findViewById(R.id.acc_z2);
+        acc_z33 = findViewById(R.id.acc_z3);
+
 
         UserDB databaseUser = Room.databaseBuilder(getApplicationContext(), UserDB.class, "User_db")
                 .fallbackToDestructiveMigration()
@@ -90,376 +120,255 @@ public class MainActivity extends AppCompatActivity {
         userDao = databaseUser.userDao();
         List<User> userList = userDao.getUserDBAll();
 
-//        Toast.makeText(getApplicationContext(),userList.get(0).getGyro_x1() +"",Toast.LENGTH_LONG).show();
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
-        String[] permission_list = {
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.BLUETOOTH_CONNECT,
-                Manifest.permission.BLUETOOTH_ADMIN,
+        mGgyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        mGyroLis = new GyroscopeListener();
 
-        };
-        ActivityCompat.requestPermissions(MainActivity.this, permission_list, 1);
+        mAccelometerSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mAccLis = new AccelometerListener();
 
-        mTvBluetoothStatus = (TextView) findViewById(R.id.tvBluetoothStatus);
-        mTvReceiveData = (TextView) findViewById(R.id.tvReceiveData);
-        mTvSendData = (EditText) findViewById(R.id.tvSendData);
-        mBtnBluetoothOn = (Button) findViewById(R.id.btnBluetoothOn);
-        mBtnBluetoothOff = (Button) findViewById(R.id.btnBluetoothOff);
-        mBtnConnect = (Button) findViewById(R.id.btnConnect);
-        mBtnSendData = (Button) findViewById(R.id.btnSendData);
-
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-
-        mBtnBluetoothOn.setOnClickListener(new Button.OnClickListener() {
+        btn_gyro2 = (Button) findViewById(R.id.btn_gyro2);
+        btn_gyro2.setOnTouchListener(new View.OnTouchListener() {
+            @SuppressLint("ClickableViewAccessibility")
             @Override
-            public void onClick(View view) {
-                bluetoothOn();
-            }
-        });
-        mBtnBluetoothOff.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                bluetoothOff();
-            }
-        });
-        mBtnConnect.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                listPairedDevices();
-            }
-        });
-        mBtnSendData.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mThreadConnectedBluetooth != null) {
-                    mThreadConnectedBluetooth.write(mTvSendData.getText().toString());
-                    mTvSendData.setText("");
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                switch (motionEvent.getAction()){
+                    case MotionEvent.ACTION_DOWN:
+                        num = 0;
+                        num2 = 0;
+                        start = System.currentTimeMillis();
+                        mSensorManager.registerListener(mGyroLis, mGgyroSensor, SENSOR_DELAY_UI);
+                        mSensorManager.registerListener(mAccLis, mAccelometerSensor, SENSOR_DELAY_UI);
+                        gyro_x11.setText(String.format("%.4f",gyro_x1));
+                        gyro_x22.setText(String.format("%.4f",gyro_x2));
+                        gyro_x33.setText(String.format("%.4f",gyro_x3));
+
+                        gyro_y11.setText(String.format("%.4f",gyro_y1));
+                        gyro_y22.setText(String.format("%.4f",gyro_y2));
+                        gyro_y33.setText(String.format("%.4f",gyro_y3));
+
+                        gyro_z11.setText(String.format("%.4f",gyro_z1));
+                        gyro_z22.setText(String.format("%.4f",gyro_z2));
+                        gyro_z33.setText(String.format("%.4f",gyro_z3));
+
+                        acc_x11.setText(String.format("%.4f",acc_x1));
+                        acc_x22.setText(String.format("%.4f",acc_x2));
+                        acc_x33.setText(String.format("%.4f",acc_x3));
+
+                        acc_y11.setText(String.format("%.4f",acc_y1));
+                        acc_y22.setText(String.format("%.4f",acc_y2));
+                        acc_y33.setText(String.format("%.4f",acc_y3));
+
+                        acc_z11.setText(String.format("%.4f",acc_z1));
+                        acc_z22.setText(String.format("%.4f",acc_z2));
+                        acc_z33.setText(String.format("%.4f",acc_z3));
+
+                        break;
+
+                    case MotionEvent.ACTION_UP:
+                        mSensorManager.unregisterListener(mGyroLis);
+                        mSensorManager.unregisterListener(mAccLis);
+
+                        break;
                 }
+                return false;
             }
         });
-        mBluetoothHandler = new Handler() {
-            public void handleMessage(android.os.Message msg) {
-                if (msg.what == BT_MESSAGE_READ) {
-                    String readMessage = null;
-                    try {
-                        readMessage = new String((byte[]) msg.obj, "UTF-8");
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                    }
-                    mTvReceiveData.setText(readMessage);
-                }
+//        btn_gyro2.setOnTouchListener(new View.OnTouchListener(){
+//            public boolean onTouch(View v, MotionEvent event){
+//                switch (event.getAction()){
+//                    case MotionEvent.ACTION_DOWN:
+//                        num = 0;
+//                        num2 = 0;
+//                        start = System.currentTimeMillis(); // start = 시작시간 - 1970년
+//                        mSensorManager.registerListener(mGyroLis, mGgyroSensor,SensorManager.SENSOR_DELAY_UI);
+//                        mSensorManager.registerListener(mAccLis, mAccelometerSensor, SENSOR_DELAY_UI);
+//                        break;
+//
+//                    case MotionEvent.ACTION_UP:
+//                        mSensorManager.unregisterListener(mGyroLis);
+//                        mSensorManager.unregisterListener(mAccLis);
+//                        break;
+//                }
+//                return false;
+//            }
+//        });
+
+        // 회원가입 버튼 클릭 시 수행
+        btn_blue = (Button) findViewById(R.id.btn_blue);
+        btn_blue.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Toast.makeText(getApplicationContext(),"ggg",Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(MainActivity.this, MainActivity2.class);
+                startActivity(intent);
+
+//                Response.Listener<String> responseListener = new Response.Listener<String>() {
+//                    @Override
+//                    public void onResponse(String response) {
+//                        User user = new User(userID, userPass, userAge, userName);
+//                        userDao.setInsertUser(user);
+//                        boolean success = false;
+//                        if(num == userList.size())
+//                            success = true;
+//                        System.out.println(success);
+////                            JSONObject jsonObject = new JSONObject(response);
+////                            boolean success = jsonObject.getBoolean("success");
+//                        if (success) { // 회원등록에 성공한 경우
+//                            Toast.makeText(getApplicationContext(),"회원 등록에 성공하였습니다.",Toast.LENGTH_SHORT).show();
+//                            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+//                            startActivity(intent);
+//                        } else { // 회원등록에 실패한 경우
+//                            Toast.makeText(getApplicationContext(),"회원 등록에 실패하였습니다.",Toast.LENGTH_SHORT).show();
+//                            return;
+//                        }
+//                    }
+//                };
+                // 서버로 Volley를 이용해서 요청을 함.
+//                RegisterRequest registerRequest = new RegisterRequest(userID,userPass,userName, responseListener);
+//                RequestQueue queue = Volley.newRequestQueue(RegisterActivity.this);
+//                queue.add(registerRequest);
+
             }
-        };
+        });
     }
-
-    void bluetoothOn() {
-        if (mBluetoothAdapter == null) {
-            Toast.makeText(getApplicationContext(), "블루투스를 지원하지 않는 기기입니다.", Toast.LENGTH_LONG).show();
-        } else {
-            if (mBluetoothAdapter.isEnabled()) {
-                Toast.makeText(getApplicationContext(), "블루투스가 이미 활성화 되어 있습니다.", Toast.LENGTH_LONG).show();
-                mTvBluetoothStatus.setText("활성화");
-            } else {
-                Toast.makeText(getApplicationContext(), "블루투스가 활성화 되어 있지 않습니다.", Toast.LENGTH_LONG).show();
-                Intent intentBluetoothEnable = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    return;
-                }
-                startActivityForResult(intentBluetoothEnable, BT_REQUEST_ENABLE);
-            }
-        }
-    }
-
-    void bluetoothOff() {
-        if (mBluetoothAdapter.isEnabled()) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
-            mBluetoothAdapter.disable();
-            Toast.makeText(getApplicationContext(), "블루투스가 비활성화 되었습니다.", Toast.LENGTH_SHORT).show();
-            mTvBluetoothStatus.setText("비활성화");
-        } else {
-            Toast.makeText(getApplicationContext(), "블루투스가 이미 비활성화 되어 있습니다.", Toast.LENGTH_SHORT).show();
-        }
+    @Override
+    public void onPause(){
+        super.onPause();
+        Log.e("LOG", "onPause()");
+        mSensorManager.unregisterListener(mGyroLis);
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case BT_REQUEST_ENABLE:
-                if (resultCode == RESULT_OK) { // 블루투스 활성화를 확인을 클릭하였다면
-                    Toast.makeText(getApplicationContext(), "블루투스 활성화", Toast.LENGTH_LONG).show();
-                    mTvBluetoothStatus.setText("활성화");
-                } else if (resultCode == RESULT_CANCELED) { // 블루투스 활성화를 취소를 클릭하였다면
-                    Toast.makeText(getApplicationContext(), "취소", Toast.LENGTH_LONG).show();
-                    mTvBluetoothStatus.setText("비활성화");
+    public void onDestroy(){
+        super.onDestroy();
+        Log.e("LOG", "onDestroy()");
+        mSensorManager.unregisterListener(mGyroLis);
+    }
+
+    private class GyroscopeListener implements SensorEventListener {
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+
+            /* 각 축의 각속도 성분을 받는다. */
+            double gyroX = event.values[0];
+            double gyroY = event.values[1];
+            double gyroZ = event.values[2];
+
+
+            double end; // end = 종료시간 - 1970년
+            double current;
+
+            /* 각속도를 적분하여 회전각을 추출하기 위해 적분 간격(dt)을 구한다.
+             * dt : 센서가 현재 상태를 감지하는 시간 간격
+             * NS2S : nano second -> second */
+            dt = (event.timestamp - timestamp) * NS2S;
+            timestamp = event.timestamp;
+
+            /* 맨 센서 인식을 활성화 하여 처음 timestamp가 0일때는 dt값이 올바르지 않으므로 넘어간다. */
+            if (dt - timestamp*NS2S != 0) {
+
+                /* 각속도 성분을 적분 -> 회전각(pitch, roll)으로 변환.
+                 * 여기까지의 pitch, roll의 단위는 '라디안'이다.
+                 * SO 아래 로그 출력부분에서 멤버변수 'RAD2DGR'를 곱해주어 degree로 변환해줌.  */
+                pitch = pitch + gyroY*dt;
+                roll = roll + gyroX*dt;
+                yaw = yaw + gyroZ*dt;
+                end = System.currentTimeMillis(); // end = 종료시간 - 1970년
+                current = end-start;
+                if(num2==2 && current> 2000 && current < 3000){
+                    gyro_x3 = gyroX;
+                    gyro_y3 = gyroY;
+                    gyro_z3 = gyroZ;
+                    num2++;
                 }
-                break;
-        }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    void listPairedDevices() {
-        if (mBluetoothAdapter.isEnabled()) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                Toast.makeText(getApplicationContext(), "권한 없음.", Toast.LENGTH_LONG).show();
-                return;
-            }
-            mPairedDevices = mBluetoothAdapter.getBondedDevices();
-
-            if (mPairedDevices.size() > 0) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("장치 선택");
-
-                mListPairedDevices = new ArrayList<String>();
-                for (BluetoothDevice device : mPairedDevices) {
-                    mListPairedDevices.add(device.getName());
-                    //mListPairedDevices.add(device.getName() + "\n" + device.getAddress());
+                else if(num2==1 && current > 1000 && current < 2000){
+                    gyro_x2 = gyroX;
+                    gyro_y2 = gyroY;
+                    gyro_z2 = gyroZ;
+                    num2++;
                 }
-                final CharSequence[] items = mListPairedDevices.toArray(new CharSequence[mListPairedDevices.size()]);
-                mListPairedDevices.toArray(new CharSequence[mListPairedDevices.size()]);
-
-                builder.setItems(items, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int item) {
-                        connectSelectedDevice(items[item].toString());
-                    }
-                });
-                AlertDialog alert = builder.create();
-                alert.show();
-            } else {
-                Toast.makeText(getApplicationContext(), "페어링된 장치가 없습니다.", Toast.LENGTH_LONG).show();
-            }
-        } else {
-            Toast.makeText(getApplicationContext(), "블루투스가 비활성화 되어 있습니다.", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    void connectSelectedDevice(String selectedDeviceName) {
-        for (BluetoothDevice tempDevice : mPairedDevices) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
-            if (selectedDeviceName.equals(tempDevice.getName())) {
-                mBluetoothDevice = tempDevice;
-                break;
-            }
-        }
-        try {
-            mBluetoothSocket = mBluetoothDevice.createRfcommSocketToServiceRecord(BT_UUID);
-            mBluetoothSocket.connect();
-            mThreadConnectedBluetooth = new ConnectedBluetoothThread(mBluetoothSocket);
-            mThreadConnectedBluetooth.start();
-            mBluetoothHandler.obtainMessage(BT_CONNECTING_STATUS, 1, -1).sendToTarget();
-        } catch (IOException e) {
-            Toast.makeText(getApplicationContext(), "블루투스 연결 중 오류가 발생했습니다.", Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private class ConnectedBluetoothThread extends Thread {
-        private final BluetoothSocket mmSocket;
-        private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
-
-        public ConnectedBluetoothThread(BluetoothSocket socket) {
-            mmSocket = socket;
-            InputStream tmpIn = null;
-            OutputStream tmpOut = null;
-
-            try {
-                tmpIn = socket.getInputStream();
-                tmpOut = socket.getOutputStream();
-            } catch (IOException e) {
-                Toast.makeText(getApplicationContext(), "소켓 연결 중 오류가 발생했습니다.", Toast.LENGTH_LONG).show();
-            }
-
-            mmInStream = tmpIn;
-            mmOutStream = tmpOut;
-        }
-        public void run() {
-            byte[] buffer = new byte[1024];
-            int bytes;
-
-            while (true) {
-                try {
-                    bytes = mmInStream.available();
-                    if (bytes != 0) {
-                        SystemClock.sleep(100);
-                        bytes = mmInStream.available();
-                        bytes = mmInStream.read(buffer, 0, bytes);
-                        mBluetoothHandler.obtainMessage(BT_MESSAGE_READ, bytes, -1, buffer).sendToTarget();
-                    }
-                } catch (IOException e) {
-                    break;
+                else if(num2 == 0 && current > 0 && current < 1000){
+                    gyro_x1 = gyroX;
+                    gyro_y1 = gyroY;
+                    gyro_z1 = gyroZ;
+                    num2++;
                 }
+                Toast.makeText(getApplicationContext(), current+" 1:"+String.format("%.4f",gyro_x1) +" 2:"+ String.format("%.4f",gyro_x2) +" 3:"+ String.format("%.4f",gyro_x3)+"",Toast.LENGTH_SHORT).show();
+
+
+
+//                Toast.makeText(getApplicationContext(), timestamp+"X:"+String.format("%.4f",gyroX)+" Y:"+String.format("%.4f",gyroY)+" Z:"+String.format("%.4f",gyroZ),Toast.LENGTH_SHORT).show();
+                Log.e("LOG", "GYROSCOPE           [X]:" + String.format("%.4f", event.values[0])
+                        + "           [Y]:" + String.format("%.4f", event.values[1])
+                        + "           [Z]:" + String.format("%.4f", event.values[2])
+                        + "           [Pitch]: " + String.format("%.1f", pitch*RAD2DGR)
+                        + "           [Roll]: " + String.format("%.1f", roll*RAD2DGR)
+                        + "           [Yaw]: " + String.format("%.1f", yaw*RAD2DGR)
+                        + "           [dt]: " + String.format("%.4f", dt));
+
             }
         }
-        public void write(String str) {
-            byte[] bytes = str.getBytes();
-            try {
-                mmOutStream.write(bytes);
-            } catch (IOException e) {
-                Toast.makeText(getApplicationContext(), "데이터 전송 중 오류가 발생했습니다.", Toast.LENGTH_LONG).show();
-            }
-        }
-        public void cancel() {
-            try {
-                mmSocket.close();
-            } catch (IOException e) {
-                Toast.makeText(getApplicationContext(), "소켓 해제 중 오류가 발생했습니다.", Toast.LENGTH_LONG).show();
-            }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
         }
     }
-//    private TextView tv_id;
-//    private BluetoothSPP bt;
-//
-//    @Override
-//    protected void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_main);
-//
-//        tv_id = findViewById(R.id.textView4);
-//
-//
-//        Intent intent = getIntent();
-//        String userID = intent.getStringExtra("userID");
-//
-//        tv_id.setText(userID+"님");
-//
-//        bt = new BluetoothSPP(this); //Initializing
-//
-//        if (!bt.isBluetoothAvailable()) { //블루투스 사용 불가
-//            Toast.makeText(getApplicationContext()
-//                    , "Bluetooth is not available"
-//                    , Toast.LENGTH_SHORT).show();
-//            finish();
-//        }
-//
-//        bt.setOnDataReceivedListener(new BluetoothSPP.OnDataReceivedListener() { //데이터 수신
-//            public void onDataReceived(byte[] data, String message) {
-//
-//                Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
-//            }
-//        });
-//
-//        bt.setBluetoothConnectionListener(new BluetoothSPP.BluetoothConnectionListener() { //연결됐을 때
-//            public void onDeviceConnected(String name, String address) {
-//                Toast.makeText(getApplicationContext()
-//                        , "Connected to " + name + "\n" + address
-//                        , Toast.LENGTH_SHORT).show();
-//            }
-//
-//            public void onDeviceDisconnected() { //연결해제
-//                Toast.makeText(getApplicationContext()
-//                        , "Connection lost", Toast.LENGTH_SHORT).show();
-//            }
-//
-//            public void onDeviceConnectionFailed() { //연결실패
-//                Toast.makeText(getApplicationContext()
-//                        , "Unable to connect", Toast.LENGTH_SHORT).show();
-//            }
-//        });
-//
-//        Button btnConnect = findViewById(R.id.btn_connect); //연결시도
-//        btnConnect.setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                if (bt.getServiceState() == BluetoothState.STATE_CONNECTED) {
-//                    bt.disconnect();
-//                }
-////                else {
-////                    Intent intent = new Intent(getApplicationContext(), DeviceList.class);
-////                    startActivityForResult(intent, BluetoothState.REQUEST_CONNECT_DEVICE);
-////                }
-//            }
-//        });
-//    }
-//
-//    public void onDestroy() {
-//        super.onDestroy();
-//        bt.stopService(); //블루투스 중지
-//    }
-//
-//    public void onStart() {
-//        super.onStart();
-//        if (!bt.isBluetoothEnabled()) { //
-//            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-//            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-//                // TODO: Consider calling
-//                //    ActivityCompat#requestPermissions
-//                // here to request the missing permissions, and then overriding
-//                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//                //                                          int[] grantResults)
-//                // to handle the case where the user grants the permission. See the documentation
-//                // for ActivityCompat#requestPermissions for more details.
-//                return;
-//            }
-////            startActivityForResult(intent, BluetoothState.REQUEST_ENABLE_BT);
-//        } else {
-//            if (!bt.isServiceAvailable()) {
-//                bt.setupService();
-//                bt.startService(BluetoothState.DEVICE_OTHER); //DEVICE_ANDROID는 안드로이드 기기 끼리
-//                setup();
-//            }
-//        }
-//    }
-//
-//    public void setup() {
-//        Button btnSend = findViewById(R.id.btn_open); //데이터 전송
-//        btnSend.setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                bt.send("1", true);
-//            }
-//        });
-//    }
-//
-//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if (requestCode == BluetoothState.REQUEST_CONNECT_DEVICE) {
-//            if (resultCode == Activity.RESULT_OK)
-//                bt.connect(data);
-//        } else if (requestCode == BluetoothState.REQUEST_ENABLE_BT) {
-//            if (resultCode == Activity.RESULT_OK) {
-//                bt.setupService();
-//                bt.startService(BluetoothState.DEVICE_OTHER);
-//                setup();
-//            } else {
-//                Toast.makeText(getApplicationContext()
-//                        , "Bluetooth was not enabled."
-//                        , Toast.LENGTH_SHORT).show();
-//                finish();
-//            }
-//        }
-//
-//    }
 
+    private class AccelometerListener implements SensorEventListener {
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+
+            double accX = event.values[0];
+            double accY = event.values[1];
+            double accZ = event.values[2];
+
+            double end; // end = 종료시간 - 1970년
+            double current;
+
+
+            double angleXZ = Math.atan2(accX,  accZ) * 180/Math.PI;
+            double angleYZ = Math.atan2(accY,  accZ) * 180/Math.PI;
+
+            end = System.currentTimeMillis(); // end = 종료시간 - 1970년
+            current = end-start;
+
+            if(num==2 && current> 2000 && current < 3000){
+                acc_x3 = accX;
+                acc_y3 = accY;
+                acc_z3 = accZ;
+                num++;
+            }
+            else if(num==1 && current > 1000 && current < 2000){
+                acc_x2 = accX;
+                acc_y2 = accY;
+                acc_z2 = accZ;
+                num++;
+            }
+            else if(num == 0 && current > 0 && current < 1000){
+                acc_x1 = accX;
+                acc_y1 = accY;
+                acc_z1 = accZ;
+                num++;
+            }
+
+            Log.e("LOG", "ACCELOMETER           [X]:" + String.format("%.4f", event.values[0])
+                    + "           [Y]:" + String.format("%.4f", event.values[1])
+                    + "           [Z]:" + String.format("%.4f", event.values[2])
+                    + "           [angleXZ]: " + String.format("%.4f", angleXZ)
+                    + "           [angleYZ]: " + String.format("%.4f", angleYZ));
+
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+        }
+    }
 }
+
